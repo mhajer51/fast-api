@@ -1,9 +1,6 @@
-version: "3.9"
-
 services:
   nginx:
     build: ./nginx
-    container_name: nginx
     ports:
       - "80:80"
     volumes:
@@ -13,7 +10,6 @@ services:
 
   api:
     build: ./api
-    container_name: fastapi_api
     working_dir: /app
     volumes:
       - ./api:/app
@@ -23,14 +19,14 @@ services:
       # DB
       MYSQL_HOST: mariadb
       MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-fastapi}
+      MYSQL_USER: ${MYSQL_USER:-fastapi}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fastapi}
 
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispass}
 
       # Mailhog (SMTP)
       SMTP_HOST: mailhog
@@ -50,12 +46,11 @@ services:
 
   mariadb:
     image: mariadb:10.5
-    container_name: mariadb
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-fastapi}
+      MYSQL_USER: ${MYSQL_USER:-fastapi}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fastapi}
     volumes:
       - ./mariadb/initdb.d:/docker-entrypoint-initdb.d
       - ./mariadb/my.cnf:/etc/mysql/my.cnf
@@ -65,29 +60,27 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
     restart: always
     ports:
       - "8081:80"
     environment:
       PMA_HOST: mariadb
       PMA_PORT: 3306
-      PMA_USER: ${MYSQL_USER}
-      PMA_PASSWORD: ${MYSQL_PASSWORD}
+      PMA_USER: ${MYSQL_USER:-fastapi}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-fastapi}
       UPLOAD_LIMIT: 128M
     depends_on:
       - mariadb
 
   redis:
     image: redis:alpine
-    container_name: redis
     command:
       [
         "redis-server",
         "--requirepass",
-        "${REDIS_PASSWORD}",
+        "${REDIS_PASSWORD:-redispass}",
         "--maxmemory",
-        "${REDIS_MEMORY}",
+        "${REDIS_MEMORY:-256mb}",
         "--maxmemory-policy",
         "allkeys-lru",
         "--bind",
@@ -96,14 +89,13 @@ services:
         "yes"
       ]
     environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_MEMORY=${REDIS_MEMORY}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redispass}
+      - REDIS_MEMORY=${REDIS_MEMORY:-256mb}
     ports:
       - "6379:6379"
 
   mailhog:
     image: mailhog/mailhog
-    container_name: mailhog
     ports:
       - "1025:1025"
       - "8025:8025"
