@@ -5,7 +5,11 @@ from app.helpers.pagination import clamp_limit
 from app.requests.user_request import UserCreateRequest, UserUpdateRequest
 from app.resources.user_resource import UserResource
 from app.services import user_service
-from app.services.exceptions import EmailAlreadyExistsError, UserNotFoundError
+from app.services.exceptions import (
+    EmailAlreadyExistsError,
+    UserNotFoundError,
+    UsernameAlreadyExistsError,
+)
 
 
 class UserController:
@@ -27,6 +31,8 @@ class UserController:
             return UserResource.from_model(user)
         except EmailAlreadyExistsError as exc:
             raise HTTPException(status_code=409, detail="Email already exists") from exc
+        except UsernameAlreadyExistsError as exc:
+            raise HTTPException(status_code=409, detail="Username already exists") from exc
 
     def update_user(self, db: Session, user_id: int, payload: UserUpdateRequest):
         try:
@@ -36,6 +42,8 @@ class UserController:
             raise HTTPException(status_code=404, detail="User not found") from exc
         except EmailAlreadyExistsError as exc:
             raise HTTPException(status_code=409, detail="Email already exists") from exc
+        except UsernameAlreadyExistsError as exc:
+            raise HTTPException(status_code=409, detail="Username already exists") from exc
 
     def delete_user(self, db: Session, user_id: int) -> None:
         try:

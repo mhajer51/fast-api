@@ -10,12 +10,16 @@ def main() -> None:
 
     subparsers.add_parser("migrate", help="Run database migrations")
     subparsers.add_parser("seed", help="Seed the database with initial data")
+    subparsers.add_parser("migrate-seed", help="Run migrations and then seed data")
 
     args = parser.parse_args()
 
     if args.command == "migrate":
         upgrade()
     elif args.command == "seed":
+        seed_all()
+    elif args.command == "migrate-seed":
+        upgrade()
         seed_all()
     else:
         parser.print_help()
