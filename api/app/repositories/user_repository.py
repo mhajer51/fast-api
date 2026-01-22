@@ -1,29 +1,44 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.crud import user as crud_user
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 
 
 def get_by_id(db: Session, user_id: int) -> User | None:
-    return crud_user.get_by_id(db, user_id)
+    return db.get(User, user_id)
 
 
 def get_by_email(db: Session, email: str) -> User | None:
-    return crud_user.get_by_email(db, email)
+    stmt = select(User).where(User.email == email)
+    return db.execute(stmt).scalars().first()
 
 
 def list_users(db: Session, skip: int = 0, limit: int = 50) -> list[User]:
-    return crud_user.list_users(db, skip=skip, limit=limit)
+    stmt = select(User).offset(skip).limit(limit)
+    return list(db.execute(stmt).scalars().all())
 
 
 def create_user(db: Session, data: UserCreate) -> User:
-    return crud_user.create_user(db, data)
+    user = User(name=data.name, email=str(data.email))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 def update_user(db: Session, user: User, data: UserUpdate) -> User:
-    return crud_user.update_user(db, user, data)
+    if data.name is not None:
+        user.name = data.name
+    if data.email is not None:
+        user.email = str(data.email)
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 def delete_user(db: Session, user: User) -> None:
-    crud_user.delete_user(db, user)
+    db.delete(user)
+    db.commit()

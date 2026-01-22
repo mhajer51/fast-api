@@ -1,29 +1,34 @@
 from sqlalchemy.orm import Session
 
+from app.models.user import User
+from app.events.dispatcher import dispatcher
+from app.events.user_events import USER_CREATED
 from app.repositories import user_repository
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.exceptions import EmailAlreadyExistsError, UserNotFoundError
 
 
-def list_users(db: Session, skip: int = 0, limit: int = 50):
+def list_users(db: Session, skip: int = 0, limit: int = 50) -> list[User]:
     return user_repository.list_users(db, skip=skip, limit=limit)
 
 
-def get_user(db: Session, user_id: int):
+def get_user(db: Session, user_id: int) -> User:
     user = user_repository.get_by_id(db, user_id)
     if not user:
         raise UserNotFoundError()
     return user
 
 
-def create_user(db: Session, payload: UserCreate):
+def create_user(db: Session, payload: UserCreate) -> User:
     exists = user_repository.get_by_email(db, str(payload.email))
     if exists:
         raise EmailAlreadyExistsError()
-    return user_repository.create_user(db, payload)
+    user = user_repository.create_user(db, payload)
+    dispatcher.dispatch(USER_CREATED, user=user)
+    return user
 
 
-def update_user(db: Session, user_id: int, payload: UserUpdate):
+def update_user(db: Session, user_id: int, payload: UserUpdate) -> User:
     user = user_repository.get_by_id(db, user_id)
     if not user:
         raise UserNotFoundError()
