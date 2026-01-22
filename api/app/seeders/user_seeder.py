@@ -12,5 +12,10 @@ class UserSeeder(Seeder):
                 return
             user_repository.create_user(
                 db,
-                UserCreate(name="Admin", email="admin@example.com"),
+                UserCreate(
+                    name="Admin",
+                    email="admin@example.com",
+                    username="admin",
+                    password="ChangeMe123!",
+                ),
             )
