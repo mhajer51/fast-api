@@ -1,0 +1,112 @@
+version: "3.9"
+
+services:
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    container_name: fastapi_api
+    working_dir: /app
+    volumes:
+      - ./api:/app
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+
+      # DB
+      MYSQL_HOST: mariadb
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # Mailhog (SMTP)
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+
+    expose:
+      - "8000"
+    command: >
+      bash -lc "
+      alembic upgrade head &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    depends_on:
+      - mariadb
+      - redis
+      - mailhog
+
+  mariadb:
+    image: mariadb:10.5
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./mariadb/initdb.d:/docker-entrypoint-initdb.d
+      - ./mariadb/my.cnf:/etc/mysql/my.cnf
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mariadb
+      PMA_PORT: 3306
+      PMA_USER: ${MYSQL_USER}
+      PMA_PASSWORD: ${MYSQL_PASSWORD}
+      UPLOAD_LIMIT: 128M
+    depends_on:
+      - mariadb
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    command:
+      [
+        "redis-server",
+        "--requirepass",
+        "${REDIS_PASSWORD}",
+        "--maxmemory",
+        "${REDIS_MEMORY}",
+        "--maxmemory-policy",
+        "allkeys-lru",
+        "--bind",
+        "0.0.0.0",
+        "--protected-mode",
+        "yes"
+      ]
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_MEMORY=${REDIS_MEMORY}
+    ports:
+      - "6379:6379"
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  mariadb_data:
