@@ -1,9 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.security import hash_password
-from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from core.security import hash_password
+from models.user import User
+from schemas.user import UserCreate, UserUpdate
 
 
 def get_by_id(db: Session, user_id: int) -> User | None:

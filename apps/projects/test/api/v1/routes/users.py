@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.schemas.user import UserCreate, UserOut, UserUpdate
-from app.services.user_service import (
+from api.deps import get_db
+from schemas.user import UserCreate, UserOut, UserUpdate
+from services.user_service import (
     EmailAlreadyExistsError,
     UserNotFoundError,
     UsernameAlreadyExistsError,
