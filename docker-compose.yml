@@ -1,110 +1,71 @@
+version: "3.9"
+
+
 services:
   nginx:
     build: ./nginx
-    container_name: fastapi_nginx
+    container_name: nginx
     ports:
       - "80:80"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
+      - sockets:/sockets
     depends_on:
-      - api
+      - apps
 
-  api:
-    build: ./api
-    container_name: fastapi_api
-    working_dir: /app
+  apps:
+    build: ./apps
+    container_name: apps
     volumes:
-      - ./api:/app
+      - sockets:/sockets
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
     environment:
-      APP_ENV: ${APP_ENV:-local}
-
-      # DB
-      MYSQL_HOST: mariadb
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-fastapi}
-      MYSQL_USER: ${MYSQL_USER:-fastapi}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fastapi}
-
-      # Redis
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispass}
-
-      # Mailhog (SMTP)
-      SMTP_HOST: mailhog
-      SMTP_PORT: 1025
-
-    expose:
-      - "8000"
-    command: >
-      bash -lc "
-      alembic upgrade head &&
-      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-      "
-    depends_on:
-      - mariadb
-      - redis
-      - mailhog
-
-  mariadb:
-    image: mariadb:10.5
-    container_name: fastapi_mariadb
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-fastapi}
-      MYSQL_USER: ${MYSQL_USER:-fastapi}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fastapi}
+      POSTGRES_DB: riofinal
+      POSTGRES_USER: python_user
+      POSTGRES_PASSWORD: secret_password
     volumes:
-      - ./mariadb/initdb.d:/docker-entrypoint-initdb.d
-      - ./mariadb/my.cnf:/etc/mysql/my.cnf
-      - mariadb_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/initdb.d:/docker-entrypoint-initdb.d
     ports:
-      - "3306:3306"
+      - "5432:5432"
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: fastapi_phpmyadmin
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
     restart: always
     ports:
       - "8081:80"
     environment:
-      PMA_HOST: mariadb
-      PMA_PORT: 3306
-      PMA_USER: ${MYSQL_USER:-fastapi}
-      PMA_PASSWORD: ${MYSQL_PASSWORD:-fastapi}
-      UPLOAD_LIMIT: 128M
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     depends_on:
-      - mariadb
+      - postgres
 
   redis:
     image: redis:alpine
-    container_name: fastapi_redis
+    container_name: redis
     command:
       [
         "redis-server",
         "--requirepass",
-        "${REDIS_PASSWORD:-redispass}",
+        "redispass",
         "--maxmemory",
-        "${REDIS_MEMORY:-256mb}",
+        "256mb",
         "--maxmemory-policy",
-        "allkeys-lru",
-        "--bind",
-        "0.0.0.0",
-        "--protected-mode",
-        "yes"
+        "allkeys-lru"
       ]
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-redispass}
-      - REDIS_MEMORY=${REDIS_MEMORY:-256mb}
     ports:
       - "6379:6379"
 
   mailhog:
     image: mailhog/mailhog
-    container_name: fastapi_mailhog
+    container_name: mailhog
     ports:
       - "1025:1025"
       - "8025:8025"
 
 volumes:
-  mariadb_data:
+  postgres_data:
