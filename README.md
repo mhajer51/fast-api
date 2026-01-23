@@ -1,4 +1,4 @@
-# FastAPI + Nginx + MariaDB + Redis + Mailhog (Docker)
+# FastAPI + Nginx + Postgres + pgAdmin + Redis + Mailhog (Docker)
 
 ## Run
 ```bash
