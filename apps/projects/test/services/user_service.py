@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 
-from app.models.user import User
-from app.repositories import user_repo
-from app.schemas.user import UserCreate, UserUpdate
+from models.user import User
+from repositories import user_repo
+from schemas.user import UserCreate, UserUpdate
 
 
 class UserNotFoundError(Exception):
