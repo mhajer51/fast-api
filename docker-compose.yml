@@ -23,9 +23,9 @@ services:
     container_name: postgres
     restart: always
     environment:
-      POSTGRES_DB: riofinal
-      POSTGRES_USER: python_user
-      POSTGRES_PASSWORD: secret_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/initdb.d:/docker-entrypoint-initdb.d
