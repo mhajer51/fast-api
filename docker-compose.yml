@@ -4,7 +4,6 @@ version: "3.9"
 services:
   nginx:
     build: ./nginx
-    container_name: nginx
     ports:
       - "80:80"
     volumes:
@@ -14,13 +13,11 @@ services:
 
   apps:
     build: ./apps
-    container_name: apps
     volumes:
       - sockets:/sockets
 
   postgres:
     image: postgres:15
-    container_name: postgres
     restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -34,19 +31,17 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin
     restart: always
     ports:
       - "8081:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     depends_on:
       - postgres
 
   redis:
     image: redis:alpine
-    container_name: redis
     command:
       [
         "redis-server",
@@ -62,10 +57,10 @@ services:
 
   mailhog:
     image: mailhog/mailhog
-    container_name: mailhog
     ports:
       - "1025:1025"
       - "8025:8025"
 
 volumes:
   postgres_data:
+  sockets:
