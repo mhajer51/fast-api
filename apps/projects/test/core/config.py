@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     # PostgreSQL
     POSTGRES_HOST: str = "postgres"
     POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str = "app_db"
-    POSTGRES_USER: str = "app_user"
-    POSTGRES_PASSWORD: str = "app_pass"
+    POSTGRES_DB: str = "fastapi"
+    POSTGRES_USER: str = "fastapi"
+    POSTGRES_PASSWORD: str = "fastapi"
 
     # Optional: override full URL from env
     DATABASE_URL: Optional[str] = None
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # Redis
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
-    REDIS_PASSWORD: str = ""
+    REDIS_PASSWORD: str = "redispass"
 
     # Mail
     SMTP_HOST: str = "mailhog"
